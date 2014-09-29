@@ -1,0 +1,62 @@
+robo
+move
+grasp
+grip
+look
+turn
+twist
+spin
+stop
+forward
+straight
+backward
+slow
+slower
+fast
+faster
+close
+open
+right
+left
+ahead
+back
+start
+run
+begin
+go
+exit
+halt
+abort
+robo start
+robo run
+robo begin
+robo stop
+robo halt
+robo abort
+robo exit
+robo off
+robo go
+move forward
+move straight
+move ahead
+move backward
+move back
+move slow
+move slower
+move fast
+move faster
+grasp close
+grasp open
+grip close
+grip open
+look forward
+look straight
+look ahead
+look backward
+look back
+turn left
+turn right
+twist left
+twist right
+spin left
+spin right

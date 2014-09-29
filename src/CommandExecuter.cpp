@@ -37,7 +37,7 @@ void* CommandExecuter::run(){
 				ROS_INFO("turn");
 
 				twistTo(robot.getTwistDirection());
-				ros::Duration(0.1).sleep();
+				//ros::Duration(0.1).sleep();
 
 			}
 
@@ -198,9 +198,11 @@ void CommandExecuter::twistTo(const string& dir) {
 
 	geometry_msgs::TwistPtr velocity_msg(new geometry_msgs::Twist);
 	if(dir.compare("right") == 0){
-		velocity_msg->angular.z = -robot.getDefaultTwistSpeed();
+		ROS_INFO("Turn right");
+		velocity_msg->angular.z = -robot.getDefaultTwistSpeed()+0.2;
 	}else if(dir.compare("left") == 0){
-		velocity_msg->angular.z = robot.getDefaultTwistSpeed();
+		ROS_INFO("Turn left");
+		velocity_msg->angular.z = robot.getDefaultTwistSpeed()+0.2;
 	}
 	base_vel_pub->publish(velocity_msg);
 }
