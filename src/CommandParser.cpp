@@ -213,8 +213,8 @@ void initLookUpContainer(){
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("grip"),string("grasp")));
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("look"),string("look")));
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("turn"),string("turn")));
-	cmdOrDataToUniqueWord.insert(pair<string,string>(string("turn"),string("twist")));
-	cmdOrDataToUniqueWord.insert(pair<string,string>(string("turn"),string("spin")));
+	cmdOrDataToUniqueWord.insert(pair<string,string>(string("twist"),string("turn")));
+	cmdOrDataToUniqueWord.insert(pair<string,string>(string("spin"),string("turn")));
 
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("forward"),string("forward")));
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("straight"),string("forward")));

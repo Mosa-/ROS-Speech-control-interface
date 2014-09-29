@@ -37,7 +37,7 @@ void* CommandExecuter::run(){
 				ROS_INFO("turn");
 
 				twistTo(robot.getTwistDirection());
-				//ros::Duration(0.1).sleep();
+				ros::Duration(0.1).sleep();
 
 			}
 
@@ -161,6 +161,9 @@ void CommandExecuter::turn(const string& d) {
 			newTwistAngle = robot.getTwistAngle() + robot.getDefaultTwistFactor();
 		} else if (d.compare("right") == 0) {
 			newTwistAngle = robot.getTwistAngle() - robot.getDefaultTwistFactor();
+			if(newTwistAngle < 0){
+				newTwistAngle = 360 - newTwistAngle;
+			}
 		} else {
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
