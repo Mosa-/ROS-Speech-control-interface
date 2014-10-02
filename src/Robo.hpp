@@ -1,4 +1,6 @@
 #include <string>
+#include <geometry_msgs/Twist.h>
+
 
 #ifndef ROBO_H_
 #define ROBO_H_
@@ -23,6 +25,43 @@ public:
 	}
 	void disable(){
 		this->activated = false;
+	}
+	void resetVelocity(){
+		this->setVelocityAngular(0.0,0.0,0.0);
+		this->setVelocityLinear(0.0,0.0,0.0);
+	}
+
+	geometry_msgs::TwistPtr getVelocity(){
+		return this->velocity_msg;
+	}
+
+	void setVelocityAngular(float x, float y, float z){
+		this->velocity_msg->angular.x = x;
+		this->velocity_msg->angular.y = y;
+		this->velocity_msg->angular.z = z;
+	}
+	void setVelocityAngularX(float x){
+		this->velocity_msg->angular.x = x;
+	}
+	void setVelocityAngularY(float y){
+		this->velocity_msg->angular.y = y;
+	}
+	void setVelocityAngularZ(float z){
+		this->velocity_msg->angular.z = z;
+	}
+	void setVelocityLinear(float x, float y, float z) {
+		this->velocity_msg->linear.x = x;
+		this->velocity_msg->linear.y = y;
+		this->velocity_msg->linear.z = z;
+	}
+	void setVelocityLinearX(float x) {
+		this->velocity_msg->linear.x = x;
+	}
+	void setVelocityLinearY(float y) {
+		this->velocity_msg->linear.y = y;
+	}
+	void setVelocityLinearZ(float z) {
+		this->velocity_msg->linear.z = z;
 	}
 
 
@@ -155,6 +194,8 @@ public:
 	}
 
 private:
+
+	geometry_msgs::TwistPtr velocity_msg;
 
 	float MAX_SPEED;
 	float defaultRobotSpeed;

@@ -130,7 +130,7 @@ void cmdParse(const std_msgs::String& cmd) {
 		// check if word is in the command map
 		string cmdValid = checkWord(tokens.at(cnt).c_str());
 
-		if(cmdValid.compare("stop") == 0){
+		if(cmdValid.compare("stop") == 0 || cmdValid.compare("off") == 0){
 			createStopCommand();
 		}else if (cmdValid.compare("NONE") != 0) {
 			// put piece of the command (c_str() without whitespace) in the vector

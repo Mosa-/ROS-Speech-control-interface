@@ -29,18 +29,14 @@ void* CommandExecuter::run(){
 		if(robot.isActivate()){
 			if(robot.isMove()){
 				accelerate(robot.getMoveDirection(), robot.getSpeed());
-
 				ros::Duration(0.1).sleep();
 			}
-
 			if(robot.isTurn()){
 				ROS_INFO("turn");
 
 				twistTo(robot.getTwistDirection());
 				ros::Duration(0.1).sleep();
-
 			}
-
 		}else{
 			ROS_INFO("[Execution failed]: Robo deactivated!");
 		}
@@ -71,7 +67,7 @@ void CommandExecuter::robo(const string& d) {
 }
 
 void CommandExecuter::move(const string& d) {
-	pthread_mutex_lock(&robotAccess);
+	//pthread_mutex_lock(&robotAccess);
 	wakeRobot();
 
 	if (robot.isActivate()) {
@@ -105,7 +101,7 @@ void CommandExecuter::move(const string& d) {
 	} else {
 		ROS_INFO("[Execution failed]: Robo deactivated!");
 	}
-	pthread_mutex_unlock(&robotAccess);
+	//pthread_mutex_unlock(&robotAccess);
 
 }
 
@@ -148,53 +144,52 @@ void CommandExecuter::look(const string& d) {
 }
 
 void CommandExecuter::turn(const string& d) {
-	pthread_mutex_lock(&robotAccess);
+	//pthread_mutex_lock(&robotAccess);
 	wakeRobot();
 	if (robot.isActivate()) {
 		int newTwistAngle = 0;
 		float newTwistAngleRad = 0.0;
+		float twistRad = 0.0;
 
 		robot.setTurn(true);
 		robot.setTwistDirection(d);
 
 		if (d.compare("left") == 0) {
-			newTwistAngle = robot.getTwistAngle() + robot.getDefaultTwistFactor();
-		} else if (d.compare("right") == 0) {
 			newTwistAngle = robot.getTwistAngle() - robot.getDefaultTwistFactor();
 			if(newTwistAngle < 0){
-				newTwistAngle = 360 - newTwistAngle;
+				newTwistAngle = 360 + newTwistAngle;
 			}
+		} else if (d.compare("right") == 0) {
+			newTwistAngle = robot.getTwistAngle() + robot.getDefaultTwistFactor();
+			newTwistAngle = newTwistAngle % 360;
 		} else {
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
 		ROS_INFO("newTwistAngle %d",newTwistAngle);
 
-		newTwistAngle = newTwistAngle % 360;
 		robot.setTwistAngle(newTwistAngle);
 		ROS_INFO("newTwistAngle modulo 360 %d",newTwistAngle);
 
-		newTwistAngleRad = newTwistAngle * M_PI  /180;
+		twistRad = robot.getDefaultTwistFactor() * M_PI  /180;
 		// t = rad/twistSpeed
-		timeout_ms = (int)(newTwistAngleRad / robot.getDefaultTwistSpeed())*1000;
+		timeout_ms = (int)(twistRad / robot.getDefaultTwistSpeed())*1000;
 		ROS_INFO("%d, %f, %f, %d",newTwistAngle, newTwistAngleRad, robot.getDefaultTwistSpeed(), timeout_ms);
 
 	} else {
 		ROS_INFO("[Execution failed]: Robo deactivated!");
 	}
-	pthread_mutex_unlock(&robotAccess);
+	//pthread_mutex_unlock(&robotAccess);
 }
 
 void CommandExecuter::accelerate(const string& dir, const float& ms) {
-	geometry_msgs::TwistPtr velocity_msg(new geometry_msgs::Twist);
-
 	if (dir.compare("forward") == 0) {
 		// 0.1 m/s forward
-		velocity_msg->linear.x = ms;
+		robot.setVelocityLinearX(ms);
 	} else {
 		// 0.1 m/s backward
-		velocity_msg->linear.x = -ms;
+		robot.setVelocityLinearX(-ms);
 	}
-	base_vel_pub->publish(velocity_msg);
+	base_vel_pub->publish(robot.getVelocity());
 }
 
 void CommandExecuter::twistTo(const string& dir) {
@@ -202,12 +197,12 @@ void CommandExecuter::twistTo(const string& dir) {
 	geometry_msgs::TwistPtr velocity_msg(new geometry_msgs::Twist);
 	if(dir.compare("right") == 0){
 		ROS_INFO("Turn right");
-		velocity_msg->angular.z = -robot.getDefaultTwistSpeed()+0.2;
+		robot.setVelocityAngularZ(-robot.getDefaultTwistSpeed()-0.2);
 	}else if(dir.compare("left") == 0){
 		ROS_INFO("Turn left");
-		velocity_msg->angular.z = robot.getDefaultTwistSpeed()+0.2;
+		robot.setVelocityAngularZ(robot.getDefaultTwistSpeed()+0.2);
 	}
-	base_vel_pub->publish(velocity_msg);
+	base_vel_pub->publish(robot.getVelocity());
 }
 
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {
