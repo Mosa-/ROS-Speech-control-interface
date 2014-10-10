@@ -30,6 +30,11 @@ private:
 
 	pthread_mutex_t robotAccess;
 
+	int executionCount;
+	int defaultExecutionCount;
+
+	float defaultSleeptime_s;
+
 	void accelerate(const string& dir, const float& ms);
 	void twistTo(const string& dir);
 	void moveArmTo(const string& dir, const float& degree);
@@ -53,7 +58,14 @@ public:
 	virtual void grasp(const string& d);
 	virtual void look(const string& d);
 	virtual void turn(const string& d);
-	void setConfigParameter(int timeout_ms, float defaultRobotSpeed, float defaultAccelerateFactor,
+	void setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed, float defaultAccelerateFactor,
 			float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* publisher);
 
+	int getExecutionCount() const {
+		return executionCount;
+	}
+
+	void setExecutionCounter(int executionCount) {
+		this->executionCount = executionCount;
+	}
 };

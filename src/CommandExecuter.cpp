@@ -12,6 +12,7 @@ void* CommandExecuter::run(){
 	// thread laufen soll -> ablauf timer thraed condition variable schlafen, bis neuer befehl aufwachen
 	// -timestamp für befehle gibt standard
 
+	int currentExecutionCounter = 0;
 
 	refreshActualTimestamp();
 
@@ -25,22 +26,26 @@ void* CommandExecuter::run(){
 		}
 		pthread_mutex_unlock(&timestampMTX);
 
-		pthread_mutex_lock(&robotAccess);
-		if(robot.isActivate()){
-			if(robot.isMove()){
-				accelerate(robot.getMoveDirection(), robot.getSpeed());
-				ros::Duration(0.1).sleep();
-			}
-			if(robot.isTurn()){
-				ROS_INFO("turn");
+		while(currentExecutionCounter < this->executionCount){
+			pthread_mutex_lock(&robotAccess);
+			if(robot.isActivate()){
+				if(robot.isMove()){
+					accelerate(robot.getMoveDirection(), robot.getSpeed());
+					ros::Duration(this->defaultSleeptime_s).sleep();
+				}
+				if(robot.isTurn()){
+					ROS_INFO("turn");
 
-				twistTo(robot.getTwistDirection());
-				ros::Duration(0.1).sleep();
+					twistTo(robot.getTwistDirection());
+					ros::Duration(this->defaultSleeptime_s).sleep();
+				}
+			}else{
+				ROS_INFO("[Execution failed]: Robo deactivated!");
 			}
-		}else{
-			ROS_INFO("[Execution failed]: Robo deactivated!");
+			pthread_mutex_unlock(&robotAccess);
+			currentExecutionCounter++;
 		}
-		pthread_mutex_unlock(&robotAccess);
+		currentExecutionCounter = 0;
 
 	}
 }
@@ -145,6 +150,7 @@ void CommandExecuter::look(const string& d) {
 
 void CommandExecuter::turn(const string& d) {
 	//pthread_mutex_lock(&robotAccess);
+	int actualTwistFactor = 0;
 	wakeRobot();
 	if (robot.isActivate()) {
 		int newTwistAngle = 0;
@@ -156,11 +162,17 @@ void CommandExecuter::turn(const string& d) {
 
 		if (d.compare("left") == 0) {
 			newTwistAngle = robot.getTwistAngle() - robot.getDefaultTwistFactor();
+			actualTwistFactor =  robot.getDefaultTwistFactor();
 			if(newTwistAngle < 0){
 				newTwistAngle = 360 + newTwistAngle;
 			}
 		} else if (d.compare("right") == 0) {
 			newTwistAngle = robot.getTwistAngle() + robot.getDefaultTwistFactor();
+			actualTwistFactor =  robot.getDefaultTwistFactor();
+			newTwistAngle = newTwistAngle % 360;
+		} else if(d.compare("backward") == 0) {
+			newTwistAngle = robot.getTwistAngle() + 180;
+			actualTwistFactor = 180;
 			newTwistAngle = newTwistAngle % 360;
 		} else {
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
@@ -170,9 +182,10 @@ void CommandExecuter::turn(const string& d) {
 		robot.setTwistAngle(newTwistAngle);
 		ROS_INFO("newTwistAngle modulo 360 %d",newTwistAngle);
 
-		twistRad = robot.getDefaultTwistFactor() * M_PI  /180;
+		twistRad = actualTwistFactor * M_PI  /180;
 		// t = rad/twistSpeed
-		timeout_ms = (int)(twistRad / robot.getDefaultTwistSpeed())*1000;
+		//timeout_ms = (int)(twistRad / robot.getDefaultTwistSpeed())*1000;
+		this->executionCount = twistRad / (robot.getDefaultTwistSpeed() * robot.getDefaultTwistSpeed());
 		ROS_INFO("%d, %f, %f, %d",newTwistAngle, newTwistAngleRad, robot.getDefaultTwistSpeed(), timeout_ms);
 
 	} else {
@@ -195,12 +208,12 @@ void CommandExecuter::accelerate(const string& dir, const float& ms) {
 void CommandExecuter::twistTo(const string& dir) {
 
 	geometry_msgs::TwistPtr velocity_msg(new geometry_msgs::Twist);
-	if(dir.compare("right") == 0){
+	if(dir.compare("right") == 0 || dir.compare("backward") == 0){
 		ROS_INFO("Turn right");
-		robot.setVelocityAngularZ(-robot.getDefaultTwistSpeed()-0.2);
+		robot.setVelocityAngularZ(-robot.getDefaultTwistSpeed());
 	}else if(dir.compare("left") == 0){
 		ROS_INFO("Turn left");
-		robot.setVelocityAngularZ(robot.getDefaultTwistSpeed()+0.2);
+		robot.setVelocityAngularZ(robot.getDefaultTwistSpeed());
 	}
 	base_vel_pub->publish(robot.getVelocity());
 }
@@ -217,10 +230,13 @@ void CommandExecuter::wakeRobot(){
 }
 
 
-void CommandExecuter::setConfigParameter(int timeout_ms, float defaultRobotSpeed,
+void CommandExecuter::setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed,
 	float defaultAccelerateFactor, float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* publisher) {
 	this->timeout_ms = timeout_ms;
 	this->defaultTimeout_ms = timeout_ms;
+	this->defaultSleeptime_s = defaultSleeptime_s;
+	this->executionCount = defaultExecutionCount;
+	this->defaultExecutionCount = defaultExecutionCount;
 	this->robot.setSpeed(defaultRobotSpeed);
 	this->robot.setAccelerateFactor(defaultAccelerateFactor);
 	this->robot.setMaxSpeed(MAX_SPEED);

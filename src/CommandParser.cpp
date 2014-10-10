@@ -263,13 +263,15 @@ int main(int argc, char **argv)
 	Publisher base_cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel_in/sci", 3);
 
 	int timeout_ms = 2000;
+	float defaultSleepTime_s = 0.1;
+	int defaultExecutionCount = 20;
 	float defaultRobotSpeed = 0.05; // m/s
 	float defaultAccelerateFactor = 0.05; // m/s
 	float MAX_SPEED = 0.35;
 	float defaultTwistFactor = 20; // °
-	float defaultTwistSpeed = 0.20; // rad/s
+	float defaultTwistSpeed = 0.30; // rad/s
 
-	cmdExecuter.setConfigParameter(timeout_ms, defaultRobotSpeed, defaultAccelerateFactor, MAX_SPEED, defaultTwistFactor, defaultTwistSpeed, &base_cmd_vel);
+	cmdExecuter.setConfigParameter(timeout_ms, defaultSleepTime_s, defaultExecutionCount, defaultRobotSpeed, defaultAccelerateFactor, MAX_SPEED, defaultTwistFactor, defaultTwistSpeed, &base_cmd_vel);
 	pthread_t cmdExecuterThread;
 	pthread_create(&cmdExecuterThread, NULL, &CommandExecuter::run_helper, &cmdExecuter);
 
