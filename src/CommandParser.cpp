@@ -263,6 +263,7 @@ int main(int argc, char **argv)
 	Publisher base_cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel_in/sci", 3);
 
 	int timeout_ms = 2000;
+	// defaultSleepTime_s * defaultExecutionCount = execution duration [s]
 	float defaultSleepTime_s = 0.1;
 	int defaultExecutionCount = 20;
 	float defaultRobotSpeed = 0.05; // m/s

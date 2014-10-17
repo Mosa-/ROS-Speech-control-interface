@@ -2,6 +2,7 @@
 
 CommandExecuter::CommandExecuter() {
 	this->running = true;
+	this->currentExecutionCounter = 0;
 }
 
 
@@ -12,7 +13,6 @@ void* CommandExecuter::run(){
 	// thread laufen soll -> ablauf timer thraed condition variable schlafen, bis neuer befehl aufwachen
 	// -timestamp für befehle gibt standard
 
-	int currentExecutionCounter = 0;
 
 	refreshActualTimestamp();
 
@@ -29,24 +29,23 @@ void* CommandExecuter::run(){
 		while(currentExecutionCounter < this->executionCount){
 			pthread_mutex_lock(&robotAccess);
 			if(robot.isActivate()){
+				ROS_INFO("active execution %d", currentExecutionCounter);
+
 				if(robot.isMove()){
 					accelerate(robot.getMoveDirection(), robot.getSpeed());
-					ros::Duration(this->defaultSleeptime_s).sleep();
 				}
 				if(robot.isTurn()){
 					ROS_INFO("turn");
 
 					twistTo(robot.getTwistDirection());
-					ros::Duration(this->defaultSleeptime_s).sleep();
 				}
+				ros::Duration(this->defaultSleeptime_s).sleep();
+				currentExecutionCounter++;
 			}else{
 				ROS_INFO("[Execution failed]: Robo deactivated!");
 			}
 			pthread_mutex_unlock(&robotAccess);
-			currentExecutionCounter++;
 		}
-		currentExecutionCounter = 0;
-
 	}
 }
 
@@ -55,7 +54,7 @@ CommandExecuter::~CommandExecuter() {
 
 void CommandExecuter::robo(const string& d) {
 	pthread_mutex_lock(&robotAccess);
-	wakeRobot();
+	wakeRobotAndResetCurrentExecutionCount();
 	if (d.compare("start") == 0) {
 		robot.activate();
 		ROS_INFO("[Execution]: Robo started!");
@@ -73,7 +72,7 @@ void CommandExecuter::robo(const string& d) {
 
 void CommandExecuter::move(const string& d) {
 	//pthread_mutex_lock(&robotAccess);
-	wakeRobot();
+	wakeRobotAndResetCurrentExecutionCount();
 
 	if (robot.isActivate()) {
 		if (d.compare("forward") == 0 || d.compare("backward") == 0) {
@@ -112,7 +111,7 @@ void CommandExecuter::move(const string& d) {
 
 void CommandExecuter::grasp(const string& d) {
 	pthread_mutex_lock(&robotAccess);
-	wakeRobot();
+	wakeRobotAndResetCurrentExecutionCount();
 
 	if (robot.isActivate()) {
 		if (d.compare("close") == 0) {
@@ -129,7 +128,7 @@ void CommandExecuter::grasp(const string& d) {
 
 void CommandExecuter::look(const string& d) {
 	pthread_mutex_lock(&robotAccess);
-	wakeRobot();
+	wakeRobotAndResetCurrentExecutionCount();
 
 	if (robot.isActivate()) {
 		if (d.compare("right") == 0) {
@@ -151,7 +150,7 @@ void CommandExecuter::look(const string& d) {
 void CommandExecuter::turn(const string& d) {
 	//pthread_mutex_lock(&robotAccess);
 	int actualTwistFactor = 0;
-	wakeRobot();
+	wakeRobotAndResetCurrentExecutionCount();
 	if (robot.isActivate()) {
 		int newTwistAngle = 0;
 		float newTwistAngleRad = 0.0;
@@ -221,11 +220,16 @@ void CommandExecuter::twistTo(const string& dir) {
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {
 }
 
-void CommandExecuter::wakeRobot(){
+void CommandExecuter::wakeRobotAndResetCurrentExecutionCount(){
 	pthread_mutex_lock(&timestampMTX);
 	refreshActualTimestamp();
 	pthread_cond_signal(&timestampCond);
 	pthread_mutex_unlock(&timestampMTX);
+	if (currentExecutionCounter >= this->executionCount) {
+		currentExecutionCounter = 0;
+	}
+	this->executionCount = defaultExecutionCount;
+
 
 }
 

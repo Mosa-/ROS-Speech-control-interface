@@ -30,6 +30,7 @@ private:
 
 	pthread_mutex_t robotAccess;
 
+	int currentExecutionCounter;
 	int executionCount;
 	int defaultExecutionCount;
 
@@ -39,7 +40,7 @@ private:
 	void twistTo(const string& dir);
 	void moveArmTo(const string& dir, const float& degree);
 
-	void wakeRobot();
+	void wakeRobotAndResetCurrentExecutionCount();
 
 	void refreshActualTimestamp();
 	long getCurrentTimeIn_ms();
