@@ -1,5 +1,6 @@
 #include <string>
 #include <geometry_msgs/Twist.h>
+#include <metralabs_msgs/IDAndFloat.h>
 
 
 #ifndef ROBO_H_
@@ -33,6 +34,9 @@ public:
 
 	geometry_msgs::TwistPtr getVelocity(){
 		return this->velocity_msg;
+	}
+	metralabs_msgs::IDAndFloatPtr getGripper(){
+		return this->gripper_msg;
 	}
 
 	void setVelocityAngular(float x, float y, float z){
@@ -196,6 +200,7 @@ public:
 private:
 
 	geometry_msgs::TwistPtr velocity_msg;
+	metralabs_msgs::IDAndFloatPtr gripper_msg;
 
 	float MAX_SPEED;
 	float defaultRobotSpeed;

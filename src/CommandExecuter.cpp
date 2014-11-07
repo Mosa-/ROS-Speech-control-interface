@@ -35,8 +35,6 @@ void* CommandExecuter::run(){
 					accelerate(robot.getMoveDirection(), robot.getSpeed());
 				}
 				if(robot.isTurn()){
-					ROS_INFO("turn");
-
 					twistTo(robot.getTwistDirection());
 				}
 				ros::Duration(this->defaultSleeptime_s).sleep();
@@ -149,7 +147,7 @@ void CommandExecuter::look(const string& d) {
 
 void CommandExecuter::turn(const string& d) {
 	//pthread_mutex_lock(&robotAccess);
-	int actualTwistFactor = 0;
+	int actualTwistFactor = robot.getDefaultTwistFactor();
 	wakeRobotAndResetCurrentExecutionCount();
 	if (robot.isActivate()) {
 		int newTwistAngle = 0;
@@ -161,13 +159,11 @@ void CommandExecuter::turn(const string& d) {
 
 		if (d.compare("left") == 0) {
 			newTwistAngle = robot.getTwistAngle() - robot.getDefaultTwistFactor();
-			actualTwistFactor =  robot.getDefaultTwistFactor();
 			if(newTwistAngle < 0){
 				newTwistAngle = 360 + newTwistAngle;
 			}
 		} else if (d.compare("right") == 0) {
 			newTwistAngle = robot.getTwistAngle() + robot.getDefaultTwistFactor();
-			actualTwistFactor =  robot.getDefaultTwistFactor();
 			newTwistAngle = newTwistAngle % 360;
 		} else if(d.compare("backward") == 0) {
 			newTwistAngle = robot.getTwistAngle() + 180;
@@ -184,7 +180,8 @@ void CommandExecuter::turn(const string& d) {
 		twistRad = actualTwistFactor * M_PI  /180;
 		// t = rad/twistSpeed
 		//timeout_ms = (int)(twistRad / robot.getDefaultTwistSpeed())*1000;
-		this->executionCount = twistRad / (robot.getDefaultTwistSpeed() * robot.getDefaultTwistSpeed());
+		this->executionCount = twistRad / (robot.getDefaultTwistSpeed() * this->defaultSleeptime_s);
+		ROS_INFO("executionCount: %d",this->executionCount );
 		ROS_INFO("%d, %f, %f, %d",newTwistAngle, newTwistAngleRad, robot.getDefaultTwistSpeed(), timeout_ms);
 
 	} else {
@@ -217,6 +214,10 @@ void CommandExecuter::twistTo(const string& dir) {
 	base_vel_pub->publish(robot.getVelocity());
 }
 
+void CommandExecuter::grispTo(const string& dir){
+	gripper_pub->Publisher(robot.getGripper());
+}
+
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {
 }
 
@@ -225,9 +226,8 @@ void CommandExecuter::wakeRobotAndResetCurrentExecutionCount(){
 	refreshActualTimestamp();
 	pthread_cond_signal(&timestampCond);
 	pthread_mutex_unlock(&timestampMTX);
-	if (currentExecutionCounter >= this->executionCount) {
-		currentExecutionCounter = 0;
-	}
+	currentExecutionCounter = 0;
+
 	this->executionCount = defaultExecutionCount;
 
 
@@ -235,7 +235,7 @@ void CommandExecuter::wakeRobotAndResetCurrentExecutionCount(){
 
 
 void CommandExecuter::setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed,
-	float defaultAccelerateFactor, float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* publisher) {
+	float defaultAccelerateFactor, float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub) {
 	this->timeout_ms = timeout_ms;
 	this->defaultTimeout_ms = timeout_ms;
 	this->defaultSleeptime_s = defaultSleeptime_s;
@@ -250,7 +250,9 @@ void CommandExecuter::setConfigParameter(int timeout_ms, float defaultSleeptime_
 	this->robot.setDefaultTwistFactor(defaultTwistFactor);
 	this->robot.setDefaultTwistSpeed(defaultTwistSpeed);
 
-	this->base_vel_pub = publisher;
+	this->base_vel_pub = base_vel_pub;
+	this->gripper_pub = gripper_pub;
+	this->arm_vel_pub = arm_vel_pub;
 }
 
 void CommandExecuter::refreshActualTimestamp(){

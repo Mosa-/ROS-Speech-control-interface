@@ -1,6 +1,6 @@
 #include "Robo.hpp"
 
-Robo::Robo() : velocity_msg(new geometry_msgs::Twist), MAX_SPEED(0.0), defaultRobotSpeed(0.0),
+Robo::Robo() : velocity_msg(new geometry_msgs::Twist), gripper_msg (new metralabs_msgs::IDAndFloat), MAX_SPEED(0.0), defaultRobotSpeed(0.0),
 defaultAccelerateFactor(0.0), defaultTwistFactor(0.0), activated(false), move(false), grasp(false),
 look(false), turn(false), speed(0.0), accelerateFactor(0.0),twistAngle(0),defaultTwistSpeed(0.0),
 twistDirection("right"),seeAngle(0.0),moveDirection("forward"){

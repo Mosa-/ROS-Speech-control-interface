@@ -4,6 +4,7 @@
 #include <vector>
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#include <metralabs_msgs/IDAndFloat.h>
 #include <time.h>
 #include <math.h>
 
@@ -24,6 +25,8 @@ private:
 	int timeout_ms;
 	long actualTimestamp;
 	Publisher* base_vel_pub;
+	Publisher* gripper_pub;
+	Publisher* arm_vel_pub;
 
 	pthread_mutex_t timestampMTX;
 	pthread_cond_t timestampCond;
@@ -38,6 +41,7 @@ private:
 
 	void accelerate(const string& dir, const float& ms);
 	void twistTo(const string& dir);
+	void grispTo(const string& dir);
 	void moveArmTo(const string& dir, const float& degree);
 
 	void wakeRobotAndResetCurrentExecutionCount();
@@ -60,7 +64,7 @@ public:
 	virtual void look(const string& d);
 	virtual void turn(const string& d);
 	void setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed, float defaultAccelerateFactor,
-			float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* publisher);
+			float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub);
 
 	int getExecutionCount() const {
 		return executionCount;
