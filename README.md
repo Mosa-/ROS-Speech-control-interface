@@ -1,2 +1,2 @@
-Speech-control-interface
+ROS-Speech-control-interface (RSCI)
 ========================
