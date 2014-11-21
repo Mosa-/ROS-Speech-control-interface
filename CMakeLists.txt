@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cmd_parse_execute)
+project(speech_control_interface)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -107,14 +107,14 @@ target_link_libraries(robo ${catkin_LIBRARIES})
 
 
 ## Declare a cpp executable
-add_executable(cmd_parse_execute src/CommandParser.cpp)
+add_executable(speech_control_interface src/CommandParser.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(cmd_parse_execute_node cmd_parse_execute_generate_messages_cpp)
 
 
-target_link_libraries(cmd_parse_execute commandExecuter robo ${catkin_LIBRARIES})
+target_link_libraries(speech_control_interface commandExecuter robo ${catkin_LIBRARIES})
 
 
 #############
@@ -132,7 +132,7 @@ target_link_libraries(cmd_parse_execute commandExecuter robo ${catkin_LIBRARIES}
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS cmd_parse_execute cmd_parse_execute_node
+# install(TARGETS speech_control_interface cmd_parse_execute_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

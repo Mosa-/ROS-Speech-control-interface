@@ -215,7 +215,7 @@ void CommandExecuter::twistTo(const string& dir) {
 }
 
 void CommandExecuter::grispTo(const string& dir){
-	gripper_pub->Publisher(robot.getGripper());
+	//gripper_pub->Publisher(robot.getGripper());
 }
 
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {
