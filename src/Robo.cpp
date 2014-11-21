@@ -17,6 +17,7 @@ void Robo::resetRobo() {
 	this->disable();
 	this->stopMoving();
 	this->stopTurning();
+	this->stopGrasp();
 	this->resetVelocity();
 }
 void Robo::resetRoboStates(){

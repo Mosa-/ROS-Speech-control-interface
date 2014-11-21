@@ -29,7 +29,7 @@ void* CommandExecuter::run(){
 		while(currentExecutionCounter < this->executionCount){
 			pthread_mutex_lock(&robotAccess);
 			if(robot.isActivate()){
-				ROS_INFO("active execution %d", currentExecutionCounter);
+				//ROS_INFO("active execution %d", currentExecutionCounter);
 
 				if(robot.isMove()){
 					accelerate(robot.getMoveDirection(), robot.getSpeed());
@@ -37,6 +37,10 @@ void* CommandExecuter::run(){
 				if(robot.isTurn()){
 					twistTo(robot.getTwistDirection());
 				}
+				if(robot.isGrasp()){
+					grispTo(robot.getGraspDirection());
+				}
+
 				ros::Duration(this->defaultSleeptime_s).sleep();
 				currentExecutionCounter++;
 			}else{
@@ -73,31 +77,29 @@ void CommandExecuter::move(const string& d) {
 	wakeRobotAndResetCurrentExecutionCount();
 
 	if (robot.isActivate()) {
+		robot.setMove(true);
 		if (d.compare("forward") == 0 || d.compare("backward") == 0) {
 			robot.setMoveDirection(d);
-			robot.setMove(true);
 			if(robot.getSpeed()==0){robot.setSpeed(robot.getAccelerateFactor());}
 
 		} else if (d.compare("slow") == 0) {
 
 			float newSpeed = robot.getSpeed()-robot.getAccelerateFactor();
-			robot.setMove(true);
 
 			if(newSpeed < 0){
 				newSpeed = 0;
-				robot.setMove(false);
 			}
 			robot.setSpeed(newSpeed);
 
 		} else if (d.compare("fast") == 0) {
 
 			float newSpeed = robot.getSpeed()+robot.getAccelerateFactor();
-			robot.setMove(true);
 
 			if(newSpeed > robot.getMaxSpeed()){newSpeed = robot.getMaxSpeed();}
 			robot.setSpeed(newSpeed);
 
 		} else {
+			robot.setMove(false);
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
 	} else {
@@ -112,9 +114,13 @@ void CommandExecuter::grasp(const string& d) {
 	wakeRobotAndResetCurrentExecutionCount();
 
 	if (robot.isActivate()) {
+		robot.setGrasp(true);
+		robot.setGraspValue(0.043);
+		ROS_INFO("grasp");
 		if (d.compare("close") == 0) {
+			robot.setGraspDirection(d);
 		} else if (d.compare("open") == 0) {
-
+			robot.setGraspDirection(d);
 		} else {
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
@@ -215,7 +221,9 @@ void CommandExecuter::twistTo(const string& dir) {
 }
 
 void CommandExecuter::grispTo(const string& dir){
-	//gripper_pub->Publisher(robot.getGripper());
+	ROS_INFO("grispTo %f",robot.getGripper()->value);
+
+	gripper_pub->publish(robot.getGripper());
 }
 
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {

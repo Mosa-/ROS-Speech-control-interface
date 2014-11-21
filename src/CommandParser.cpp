@@ -252,7 +252,7 @@ int main(int argc, char **argv)
    * You must call one of the versions of ros::init() before using any other
    * part of the ROS system.
    */
-  ros::init(argc, argv, "cmdParser");
+  ros::init(argc, argv, "speech_control_interface");
 
   /**
    * NodeHandle is the main access point to communications with the ROS system.
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	Publisher base_cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel_in/sci", 3);
 	Publisher arm_vel_pub = n.advertise<geometry_msgs::Twist>("moveArmVelocity", 3);
-	Publisher gripper_pub = n.advertise<metralabs_msgs::IDAndFloat>("move_position", 1);
+	Publisher gripper_pub = n.advertise<metralabs_msgs::IDAndFloat>("/schunk/move_position", 1);
 
 	int timeout_ms = 2000;
 	// defaultSleepTime_s * defaultExecutionCount = execution duration [s]

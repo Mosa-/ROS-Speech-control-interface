@@ -21,6 +21,9 @@ public:
 	void stopTurning(){
 		this->turn = false;
 	}
+	void stopGrasp(){
+		this->grasp = false;
+	}
 	void activate(){
 		this->activated = true;
 	}
@@ -197,6 +200,19 @@ public:
 		this->defaultTwistSpeed = defaultTwistSpeed;
 	}
 
+	const string& getGraspDirection() const {
+		return graspDirection;
+	}
+
+	void setGraspDirection(const string& graspDirection) {
+		this->graspDirection = graspDirection;
+	}
+
+	void setGraspValue(float graspValue){
+		this->gripper_msg->id = 5;
+		this->gripper_msg->value = graspValue;
+	}
+
 private:
 
 	geometry_msgs::TwistPtr velocity_msg;
@@ -221,6 +237,8 @@ private:
 
 	float seeAngle;
 	string moveDirection;
+
+	string graspDirection;
 };
 
 #endif /* ROBO_H_ */
