@@ -1,4 +1,5 @@
 #include <string>
+#include <math.h>
 #include <geometry_msgs/Twist.h>
 #include <metralabs_msgs/IDAndFloat.h>
 
@@ -23,6 +24,9 @@ public:
 	}
 	void stopGrasp(){
 		this->grasp = false;
+	}
+	void stopLook(){
+		this->look = false;
 	}
 	void activate(){
 		this->activated = true;
@@ -209,8 +213,23 @@ public:
 	}
 
 	void setGraspValue(float graspValue){
+		float new_gripper_value  = graspValue;
 		this->gripper_msg->id = 5;
-		this->gripper_msg->value = graspValue;
+		new_gripper_value = fmax(new_gripper_value, 0);
+		new_gripper_value = fmin(new_gripper_value, 0.068);
+		this->gripper_msg->value = new_gripper_value;
+	}
+
+	float getCurrentGraspValue(){
+		return this->gripper_msg->value;
+	}
+
+	float getDefaultGripperStep() const {
+		return defaultGripperStep;
+	}
+
+	void setDefaultGripperStep(float defaultGripperStep) {
+		this->defaultGripperStep = defaultGripperStep;
 	}
 
 private:
@@ -222,6 +241,7 @@ private:
 	float defaultRobotSpeed;
 	float defaultAccelerateFactor;
 	int defaultTwistFactor;
+	float defaultGripperStep;
 
 	bool activated;
 	bool move;

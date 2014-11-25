@@ -41,6 +41,10 @@ void* CommandExecuter::run(){
 					grispTo(robot.getGraspDirection());
 				}
 
+				if(robot.isLook()){
+					moveArmTo("", 0);
+				}
+
 				ros::Duration(this->defaultSleeptime_s).sleep();
 				currentExecutionCounter++;
 			}else{
@@ -115,8 +119,6 @@ void CommandExecuter::grasp(const string& d) {
 
 	if (robot.isActivate()) {
 		robot.setGrasp(true);
-		robot.setGraspValue(0.043);
-		ROS_INFO("grasp");
 		if (d.compare("close") == 0) {
 			robot.setGraspDirection(d);
 		} else if (d.compare("open") == 0) {
@@ -134,7 +136,10 @@ void CommandExecuter::look(const string& d) {
 	pthread_mutex_lock(&robotAccess);
 	wakeRobotAndResetCurrentExecutionCount();
 
+	ROS_INFO("look");
+
 	if (robot.isActivate()) {
+		robot.setLook(true);
 		if (d.compare("right") == 0) {
 		} else if (d.compare("left") == 0) {
 
@@ -148,6 +153,8 @@ void CommandExecuter::look(const string& d) {
 	} else {
 		ROS_INFO("[Execution failed]: Robo deactivated!");
 	}
+	this->executionCount = 2;
+
 	pthread_mutex_unlock(&robotAccess);
 }
 
@@ -211,10 +218,8 @@ void CommandExecuter::twistTo(const string& dir) {
 
 	geometry_msgs::TwistPtr velocity_msg(new geometry_msgs::Twist);
 	if(dir.compare("right") == 0 || dir.compare("backward") == 0){
-		ROS_INFO("Turn right");
 		robot.setVelocityAngularZ(-robot.getDefaultTwistSpeed());
 	}else if(dir.compare("left") == 0){
-		ROS_INFO("Turn left");
 		robot.setVelocityAngularZ(robot.getDefaultTwistSpeed());
 	}
 	base_vel_pub->publish(robot.getVelocity());
@@ -223,10 +228,22 @@ void CommandExecuter::twistTo(const string& dir) {
 void CommandExecuter::grispTo(const string& dir){
 	ROS_INFO("grispTo %f",robot.getGripper()->value);
 
+	float currentGraspValue = robot.getCurrentGraspValue();
+	this->executionCount = 3;
+	if(dir.compare("open") == 0){
+		robot.setGraspValue(currentGraspValue + robot.getDefaultGripperStep());
+	}else{
+		robot.setGraspValue(currentGraspValue - robot.getDefaultGripperStep());
+	}
 	gripper_pub->publish(robot.getGripper());
 }
 
 void CommandExecuter::moveArmTo(const string& dir, const float& degree) {
+	geometry_msgs::TwistPtr arm_msg (new geometry_msgs::Twist);
+
+	arm_msg->angular.y = 1 * 0.87;
+	arm_msg->angular.z = -1 * 0.43;
+	arm_vel_pub->publish(arm_msg);
 }
 
 void CommandExecuter::wakeRobotAndResetCurrentExecutionCount(){
@@ -237,13 +254,11 @@ void CommandExecuter::wakeRobotAndResetCurrentExecutionCount(){
 	currentExecutionCounter = 0;
 
 	this->executionCount = defaultExecutionCount;
-
-
 }
 
 
 void CommandExecuter::setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed,
-	float defaultAccelerateFactor, float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub) {
+	float defaultAccelerateFactor, float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, float defaultGripperStep, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub) {
 	this->timeout_ms = timeout_ms;
 	this->defaultTimeout_ms = timeout_ms;
 	this->defaultSleeptime_s = defaultSleeptime_s;
@@ -257,6 +272,7 @@ void CommandExecuter::setConfigParameter(int timeout_ms, float defaultSleeptime_
 	this->robot.setDefaultAccelerateFactor(defaultAccelerateFactor);
 	this->robot.setDefaultTwistFactor(defaultTwistFactor);
 	this->robot.setDefaultTwistSpeed(defaultTwistSpeed);
+	this->robot.setDefaultGripperStep(defaultGripperStep);
 
 	this->base_vel_pub = base_vel_pub;
 	this->gripper_pub = gripper_pub;

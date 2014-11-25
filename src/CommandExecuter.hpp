@@ -64,7 +64,7 @@ public:
 	virtual void look(const string& d);
 	virtual void turn(const string& d);
 	void setConfigParameter(int timeout_ms, float defaultSleeptime_s, int defaultExecutionCount, float defaultRobotSpeed, float defaultAccelerateFactor,
-			float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub);
+			float MAX_SPEED, int defaultTwistFactor, float defaultTwistSpeed, float defaultGripperStep, Publisher* base_vel_pub, Publisher* gripper_pub, Publisher* arm_vel_pub);
 
 	int getExecutionCount() const {
 		return executionCount;

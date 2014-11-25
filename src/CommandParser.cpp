@@ -261,7 +261,7 @@ int main(int argc, char **argv)
    */
 	ros::NodeHandle n;
 	Publisher base_cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel_in/sci", 3);
-	Publisher arm_vel_pub = n.advertise<geometry_msgs::Twist>("moveArmVelocity", 3);
+	Publisher arm_vel_pub = n.advertise<geometry_msgs::Twist>("/schunk/moveArmVelocity", 3);
 	Publisher gripper_pub = n.advertise<metralabs_msgs::IDAndFloat>("/schunk/move_position", 1);
 
 	int timeout_ms = 2000;
@@ -273,9 +273,10 @@ int main(int argc, char **argv)
 	float MAX_SPEED = 0.35;
 	float defaultTwistFactor = 30; // °
 	float defaultTwistSpeed = 0.30; // rad/s
+	float defaultGripperStep = 0.01;
 
 	cmdExecuter.setConfigParameter(timeout_ms, defaultSleepTime_s, defaultExecutionCount, defaultRobotSpeed, defaultAccelerateFactor,
-			MAX_SPEED, defaultTwistFactor, defaultTwistSpeed, &base_cmd_vel, &gripper_pub, &arm_vel_pub);
+			MAX_SPEED, defaultTwistFactor, defaultTwistSpeed, defaultGripperStep, &base_cmd_vel, &gripper_pub, &arm_vel_pub);
 	pthread_t cmdExecuterThread;
 	pthread_create(&cmdExecuterThread, NULL, &CommandExecuter::run_helper, &cmdExecuter);
 
