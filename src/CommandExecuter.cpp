@@ -124,6 +124,7 @@ void CommandExecuter::grasp(const string& d) {
 		} else if (d.compare("open") == 0) {
 			robot.setGraspDirection(d);
 		} else {
+			robot.setGrasp(false);
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
 	} else {
@@ -148,6 +149,7 @@ void CommandExecuter::look(const string& d) {
 		} else if (d.compare("backward") == 0) {
 
 		} else {
+			robot.setLook(false);
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
 	} else {
@@ -183,6 +185,7 @@ void CommandExecuter::turn(const string& d) {
 			actualTwistFactor = 180;
 			newTwistAngle = newTwistAngle % 360;
 		} else {
+			robot.setTurn(false);
 			ROS_INFO("[Execution failed]: Command [%s] not found", d.c_str());
 		}
 		ROS_INFO("newTwistAngle %d",newTwistAngle);
@@ -226,8 +229,6 @@ void CommandExecuter::twistTo(const string& dir) {
 }
 
 void CommandExecuter::grispTo(const string& dir){
-	ROS_INFO("grispTo %f",robot.getGripper()->value);
-
 	float currentGraspValue = robot.getCurrentGraspValue();
 	this->executionCount = 3;
 	if(dir.compare("open") == 0){

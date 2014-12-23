@@ -149,9 +149,10 @@ void cmdParse(const std_msgs::String& cmd) {
 		// publish cmd to visualizer
 		stringstream ss;
 		ss << compoundCmd.at(0) << " " << compoundCmd.at(1);
-		String publishMsg;
-		publishMsg.data = ss.str();
+		std_msgs::StringPtr publishMsg(new std_msgs::String);
+		publishMsg->data = ss.str();
 		pubCmd.publish(publishMsg);
+		ROS_INFO("publish to rqt_ccg [%s]", publishMsg->data.c_str());
 		compoundCmd.clear();
 	}
 
@@ -260,6 +261,7 @@ int main(int argc, char **argv)
    * NodeHandle destructed will close down the node.
    */
 	ros::NodeHandle n;
+
 	Publisher base_cmd_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel_in/sci", 3);
 	Publisher arm_vel_pub = n.advertise<geometry_msgs::Twist>("/schunk/moveArmVelocity", 3);
 	Publisher gripper_pub = n.advertise<metralabs_msgs::IDAndFloat>("/schunk/move_position", 1);
@@ -284,8 +286,8 @@ int main(int argc, char **argv)
   ros::Subscriber sub = n.subscribe("/recognizer/output", 2, cmdParse);
   cout << "test" << endl;
 
-  // Set publisher for publishing the resulting commands [store 10 messages]
-  pubCmd = n.advertise<std_msgs::String>("commandParser/cmd", 10);
+  // Set publisher for publishing the resulting commands [store 5 messages]
+  pubCmd = n.advertise<std_msgs::String>("/speech_control_interface/cmd", 5);
   cout << "test2" << endl;
 
   // Need for arriving speech commands
