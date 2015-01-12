@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <pthread.h>
 #include "CommandExecuter.hpp"
+#include "speech_control_interface/ConfigParameter.h"
 
 using namespace std_msgs;
 using namespace std;
@@ -16,8 +19,9 @@ map<string, string> cmdOrDataToUniqueWord;
 //Unique command/data -> cmd/data
 map<string, string> wordClassifier;
 CommandExecuter cmdExecuter;
+std_msgs::Float32MultiArray configArray;
 
-
+bool appStart;
 
 // check the order of the command with data and execute it
 void executeCmd(const vector<string>& cmd) {
@@ -98,62 +102,66 @@ void createStopCommand(){
 
 // composition of a command: <command> [<data>]
 void cmdParse(const std_msgs::String& cmd) {
-	String cmdStr = cmd;
 
-	string cmds = cmdStr.data;
-	vector<string> tokens;
-	stringstream mySstream(cmds);
-	string temp;
-	while (getline(mySstream, temp, ' ')) {
-		tokens.push_back(temp);
-	}
+	if(appStart){
+		String cmdStr = cmd;
 
-	if (tokens.size() > 2) {
-		ROS_INFO("I heard more than 2 words: [%s]", cmdStr.data.c_str());
-	} else if (tokens.size() == 2) {
-		ROS_INFO("I heard 2 words: [%s]", cmdStr.data.c_str());
-	} else {
-		ROS_INFO("I heard 1 word: [%s]", cmdStr.data.c_str());
-	}
-
-	// TODO:
-	//create interface for commands (methods) -> "HAL"
-	//map like DB which maps speech cmds to interface cmd
-
-	int cnt = 0;
-	while (tokens.size() > cnt) {
-		if (compoundCmd.size() > 2) {
-			ROS_INFO("Error: Too many command pieces. Execute only the first two words of the command text.");
-			break;
+		string cmds = cmdStr.data;
+		vector<string> tokens;
+		stringstream mySstream(cmds);
+		string temp;
+		while (getline(mySstream, temp, ' ')) {
+			tokens.push_back(temp);
 		}
 
-		// check if word is in the command map
-		string cmdValid = checkWord(tokens.at(cnt).c_str());
-
-		if(cmdValid.compare("stop") == 0 || cmdValid.compare("off") == 0){
-			createStopCommand();
-		}else if (cmdValid.compare("NONE") != 0) {
-			// put piece of the command (c_str() without whitespace) in the vector
-			compoundCmd.push_back(cmdValid.c_str());
-			ROS_INFO("Put [%s] as a piece of a command.\n Total words: [%d]",
-					tokens.at(cnt).c_str(), compoundCmd.size());
-
+		if (tokens.size() > 2) {
+			ROS_INFO("I heard more than 2 words: [%s]", cmdStr.data.c_str());
+		} else if (tokens.size() == 2) {
+			ROS_INFO("I heard 2 words: [%s]", cmdStr.data.c_str());
+		} else {
+			ROS_INFO("I heard 1 word: [%s]", cmdStr.data.c_str());
 		}
-		cnt++;
-	}
 
-	if (compoundCmd.size() > 1) {
-		ROS_INFO("Execute: [%s][%s]", compoundCmd.at(0).c_str(),
-				compoundCmd.at(1).c_str());
-		executeCmd(compoundCmd);
-		// publish cmd to visualizer
-		stringstream ss;
-		ss << compoundCmd.at(0) << " " << compoundCmd.at(1);
-		std_msgs::StringPtr publishMsg(new std_msgs::String);
-		publishMsg->data = ss.str();
-		pubCmd.publish(publishMsg);
-		ROS_INFO("publish to rqt_ccg [%s]", publishMsg->data.c_str());
-		compoundCmd.clear();
+		// TODO:
+		//create interface for commands (methods) -> "HAL"
+		//map like DB which maps speech cmds to interface cmd
+
+		int cnt = 0;
+		while (tokens.size() > cnt) {
+			if (compoundCmd.size() > 2) {
+				ROS_INFO("Error: Too many command pieces. Execute only the first two words of the command text.");
+				break;
+			}
+
+			// check if word is in the command map
+			string cmdValid = checkWord(tokens.at(cnt).c_str());
+
+			if(cmdValid.compare("stop") == 0 || cmdValid.compare("off") == 0){
+				createStopCommand();
+			}else if (cmdValid.compare("NONE") != 0) {
+				// put piece of the command (c_str() without whitespace) in the vector
+				compoundCmd.push_back(cmdValid.c_str());
+				ROS_INFO("Put [%s] as a piece of a command.\n Total words: [%d]",
+						tokens.at(cnt).c_str(), compoundCmd.size());
+
+			}
+			cnt++;
+		}
+		if (compoundCmd.size() > 1) {
+			ROS_INFO("Execute: [%s][%s]", compoundCmd.at(0).c_str(),
+					compoundCmd.at(1).c_str());
+			executeCmd(compoundCmd);
+			// publish cmd to visualizer
+			stringstream ss;
+			ss << compoundCmd.at(0) << " " << compoundCmd.at(1);
+			std_msgs::StringPtr publishMsg(new std_msgs::String);
+			publishMsg->data = ss.str();
+			pubCmd.publish(publishMsg);
+			ROS_INFO("publish to rqt_ccg [%s]", publishMsg->data.c_str());
+			compoundCmd.clear();
+		}
+	}else{
+		ROS_INFO("Please start RSCI in the GUI.");
 	}
 
 
@@ -241,6 +249,19 @@ void initLookUpContainer(){
 	cmdOrDataToUniqueWord.insert(pair<string,string>(string("off"),string("off")));
 }
 
+void configParameter(const std_msgs::Float32MultiArray::ConstPtr& configParameters){
+
+	float i = 0;
+
+	for(std::vector<float>::const_iterator it = configParameters->data.begin(); it != configParameters->data.end(); ++it){
+		configArray.data.push_back(*it);
+		i++;
+		ROS_INFO("EINFACH SO %f", *it);
+	}
+
+	appStart = true;
+}
+
 int main(int argc, char **argv)
 {
   /**
@@ -276,23 +297,23 @@ int main(int argc, char **argv)
 	float defaultTwistFactor = 30; // °
 	float defaultTwistSpeed = 0.30; // rad/s
 	float defaultGripperStep = 0.01;
+	appStart = false;
 
 	cmdExecuter.setConfigParameter(timeout_ms, defaultSleepTime_s, defaultExecutionCount, defaultRobotSpeed, defaultAccelerateFactor,
 			MAX_SPEED, defaultTwistFactor, defaultTwistSpeed, defaultGripperStep, &base_cmd_vel, &gripper_pub, &arm_vel_pub);
 	pthread_t cmdExecuterThread;
 	pthread_create(&cmdExecuterThread, NULL, &CommandExecuter::run_helper, &cmdExecuter);
 
+	  ros::Subscriber sub2 = n.subscribe("/rqt_ccg/configparameter", 1, configParameter);
+
   // Subscribe output of the speech recognizer [store 2 messages]
   ros::Subscriber sub = n.subscribe("/recognizer/output", 2, cmdParse);
-  cout << "test" << endl;
 
   // Set publisher for publishing the resulting commands [store 5 messages]
   pubCmd = n.advertise<std_msgs::String>("/speech_control_interface/cmd", 5);
-  cout << "test2" << endl;
 
   // Need for arriving speech commands
   initLookUpContainer();
-  cout << "test3" << endl;
 
 
   /**

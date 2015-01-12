@@ -13,6 +13,7 @@ void* CommandExecuter::run(){
 	// thread laufen soll -> ablauf timer thraed condition variable schlafen, bis neuer befehl aufwachen
 	// -timestamp für befehle gibt standard
 
+	static bool alert = true;
 
 	refreshActualTimestamp();
 
@@ -29,6 +30,7 @@ void* CommandExecuter::run(){
 		while(currentExecutionCounter < this->executionCount){
 			pthread_mutex_lock(&robotAccess);
 			if(robot.isActivate()){
+				alert = true;
 				//ROS_INFO("active execution %d", currentExecutionCounter);
 
 				if(robot.isMove()){
@@ -48,7 +50,10 @@ void* CommandExecuter::run(){
 				ros::Duration(this->defaultSleeptime_s).sleep();
 				currentExecutionCounter++;
 			}else{
-				ROS_INFO("[Execution failed]: Robo deactivated!");
+				if(alert){
+					ROS_INFO("[Execution failed]: Robo deactivated!");
+					alert = false;
+				}
 			}
 			pthread_mutex_unlock(&robotAccess);
 		}
